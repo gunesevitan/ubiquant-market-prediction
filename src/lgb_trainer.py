@@ -83,7 +83,7 @@ class LightGBMTrainer:
 
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
 
-        trn_dataset = lgb.Dataset(df.loc[self.features], label=df.loc[self.target], categorical_feature=self.categorical_features)
+        trn_dataset = lgb.Dataset(df.loc[:, self.features], label=df.loc[:, self.target], categorical_feature=self.categorical_features)
 
         model = lgb.train(
             params=self.model_parameters,
