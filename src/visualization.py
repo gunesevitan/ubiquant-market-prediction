@@ -95,12 +95,13 @@ def visualize_learning_curve(training_losses, validation_losses, title, path=Non
         ax=ax,
         label='train_loss'
     )
-    sns.lineplot(
-        x=np.arange(1, len(validation_losses) + 1),
-        y=validation_losses,
-        ax=ax,
-        label='val_loss'
-    )
+    if validation_losses is not None:
+        sns.lineplot(
+            x=np.arange(1, len(validation_losses) + 1),
+            y=validation_losses,
+            ax=ax,
+            label='val_loss'
+        )
     ax.set_xlabel('Epochs/Steps', size=15, labelpad=12.5)
     ax.set_ylabel('Loss', size=15, labelpad=12.5)
     ax.tick_params(axis='x', labelsize=12.5, pad=10)
