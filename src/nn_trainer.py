@@ -183,7 +183,7 @@ class NeuralNetworkTrainer:
                 print(f'Best validation loss is {np.min(summary["val_loss"]):.6f}')
                 early_stopping = True
 
-        val_score = metrics.mean_pearson_correlation_coefficient(df)
+        val_score = metrics.mean_pearson_correlation_coefficient(df.loc[val_idx])
         print(f'\nNeural Network Validation Score: {val_score:.6f}\n')
         df['predictions'].to_csv(settings.MODELS / self.model_parameters['model_path'] / 'single_split' / 'predictions.csv', index=False)
 
