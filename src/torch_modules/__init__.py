@@ -1,1 +1,2 @@
-from mlp import *
+from .mlp import *
+from torch.nn import *
