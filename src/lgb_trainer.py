@@ -30,7 +30,6 @@ class LightGBMTrainer:
         print(f'{"-" * 30}\nRunning LightGBM Model for Training\n{"-" * 30}\n')
 
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
-
         trn_idx, val_idx = df.loc[df['fold'] == 0].index, df.loc[df['fold'] == 1].index
         trn_dataset = lgb.Dataset(df.loc[trn_idx, self.features], label=df.loc[trn_idx, self.target], categorical_feature=self.categorical_features)
         val_dataset = lgb.Dataset(df.loc[val_idx, self.features], label=df.loc[val_idx, self.target], categorical_feature=self.categorical_features)
@@ -82,7 +81,6 @@ class LightGBMTrainer:
         print(f'{"-" * 30}\nRunning LightGBM Model for Training\n{"-" * 30}\n')
 
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
-
         trn_dataset = lgb.Dataset(df.loc[:, self.features], label=df.loc[:, self.target], categorical_feature=self.categorical_features)
 
         model = lgb.train(
