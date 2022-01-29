@@ -14,7 +14,7 @@ class PearsonCorrelationCoefficientLoss(nn.Module):
         y = targets - torch.mean(targets)
 
         loss = torch.sum(x * y) / (torch.sqrt(torch.sum(x ** 2)) * torch.sqrt(torch.sum(y ** 2)))
-        return 1 - loss
+        return -loss
 
 
 class CosineSimilarityLoss(nn.Module):
@@ -30,4 +30,4 @@ class CosineSimilarityLoss(nn.Module):
         y = targets - torch.mean(targets)
 
         loss = self.cosine_similarity(x.view(-1, 1), y.view(-1, 1))
-        return 1 - loss
+        return -loss
