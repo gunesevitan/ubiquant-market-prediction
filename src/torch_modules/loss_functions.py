@@ -29,5 +29,5 @@ class CosineSimilarityLoss(nn.Module):
         x = inputs - torch.mean(inputs)
         y = targets - torch.mean(targets)
 
-        loss = self.cosine_similarity(x, y)
+        loss = self.cosine_similarity(x.view(-1, 1), y.view(-1, 1))
         return 1 - loss
