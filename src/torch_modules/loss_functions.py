@@ -10,8 +10,24 @@ class PearsonCorrelationCoefficientLoss(nn.Module):
 
     def forward(self, inputs, targets):
 
-        vx = inputs - torch.mean(inputs)
-        vy = targets - torch.mean(targets)
+        x = inputs - torch.mean(inputs)
+        y = targets - torch.mean(targets)
 
-        loss = torch.sum(vx * vy) / (torch.sqrt(torch.sum(vx ** 2)) * torch.sqrt(torch.sum(vy ** 2)))
+        loss = torch.sum(x * y) / (torch.sqrt(torch.sum(x ** 2)) * torch.sqrt(torch.sum(y ** 2)))
+        return 1 - loss
+
+
+class CosineSimilarityLoss(nn.Module):
+
+    def __init__(self):
+
+        super(CosineSimilarityLoss, self).__init__()
+        self.cosine_similarity = nn.CosineSimilarity()
+
+    def forward(self, inputs, targets):
+
+        x = inputs - torch.mean(inputs)
+        y = targets - torch.mean(targets)
+
+        loss = self.cosine_similarity(x, y)
         return 1 - loss
