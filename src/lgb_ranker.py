@@ -31,8 +31,8 @@ class LightGBMRanker:
 
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
         trn_idx, val_idx = df.loc[df['fold'] == 0].index, df.loc[df['fold'] == 1].index
-        X_trn, y_trn, query_trn = df.loc[trn_idx, self.features], df.loc[trn_idx, self.target], len(trn_idx)
-        X_val, y_val, query_val = df.loc[val_idx, self.features], df.loc[val_idx, self.target], len(val_idx)
+        X_trn, y_trn, query_trn = df.loc[trn_idx, self.features], df.loc[trn_idx, self.target], [len(trn_idx)]
+        X_val, y_val, query_val = df.loc[val_idx, self.features], df.loc[val_idx, self.target], [len(val_idx)]
 
         model = lgb.LGBMRanker(**self.model_parameters)
         model.fit(
@@ -81,7 +81,7 @@ class LightGBMRanker:
         print(f'{"-" * 30}\nRunning LightGBM Ranker Model for Training\n{"-" * 30}\n')
 
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
-        X_trn, y_trn, query_trn = df.loc[:, self.features], df.loc[:, self.target], len(df)
+        X_trn, y_trn, query_trn = df.loc[:, self.features], df.loc[:, self.target], [len(df)]
 
         model = lgb.LGBMRanker(**self.model_parameters)
         model.fit(
