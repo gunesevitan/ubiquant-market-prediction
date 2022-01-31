@@ -61,6 +61,7 @@ model_parameters:
   n_jobs: -1
 
 fit_parameters:
+  eval_at: [1, 2, 3, 4, 5]
   boosting_rounds: 10000
   early_stopping_rounds: 250
   verbose_eval: 100
