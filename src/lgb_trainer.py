@@ -102,6 +102,6 @@ class LightGBMTrainer:
         df_feature_importance['Importance'] += model.feature_importance(importance_type='gain')
         visualization.visualize_feature_importance(
             df_feature_importance=df_feature_importance,
-            title='LightGBM - Single Split Feature Importance (Gain)',
+            title='LightGBM - No Split Feature Importance (Gain)',
             path=settings.MODELS / 'lightgbm' / 'no_split' / 'feature_importance.png'
         )
