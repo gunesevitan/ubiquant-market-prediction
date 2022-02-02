@@ -15,7 +15,7 @@ def visualize_feature_importance(df_feature_importance, title, path=None):
     path (str or None): Path of the output file (if path is None, plot is displayed with selected backend)
     """
 
-    df_feature_importance.sort_values(by='Importance', inplace=True, ascending=False)
+    df_feature_importance.sort_values(by=df_feature_importance.columns[0], inplace=True, ascending=False)
 
     fig, ax = plt.subplots(figsize=(24, len(df_feature_importance)))
     sns.barplot(
