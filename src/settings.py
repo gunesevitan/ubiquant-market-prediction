@@ -1,6 +1,6 @@
 from pathlib import Path
 
 
-ROOT = Path('/home/gunes/Desktop/Projects/ubiquant-market-prediction')
+ROOT = Path('/home/gunese/Desktop/projects/ubiquant-market-prediction')
 DATA = ROOT / 'data'
 MODELS = ROOT / 'models'
