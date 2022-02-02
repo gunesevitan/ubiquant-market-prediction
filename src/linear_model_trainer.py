@@ -29,7 +29,7 @@ class LinearModelTrainer:
 
         print(f'{"-" * 30}\nRunning {self.model_class} Model for Training\n{"-" * 30}\n')
 
-        df_feature_coefficient = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Coefficient'])
+        df_feature_coefficient = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
         trn_idx, val_idx = df.loc[df['fold'] == 0].index, df.loc[df['fold'] == 1].index
 
         model = getattr(sklearn.linear_model, self.model_class)(**self.model_parameters)
@@ -37,7 +37,7 @@ class LinearModelTrainer:
         pickle.dump(model, open(settings.MODELS / 'linear_model' / 'single_split' / 'model', 'wb'))
 
         df.loc[val_idx, 'predictions'] = model.predict(df.loc[val_idx, self.features])
-        df_feature_coefficient['Coefficient'] += model.coef_
+        df_feature_coefficient['Importance'] += model.coef_
         val_score = metrics.mean_pearson_correlation_coefficient(df)
         print(f'\n{self.model_class} Validation Score: {val_score:.6f}\n')
         df['predictions'].to_csv(settings.MODELS / 'linear_model' / 'single_split' / 'predictions.csv', index=False)
@@ -66,13 +66,13 @@ class LinearModelTrainer:
 
         print(f'{"-" * 30}\nRunning {self.model_class} Model for Training\n{"-" * 30}\n')
 
-        df_feature_coefficient = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Coefficient'])
+        df_feature_coefficient = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
 
         model = getattr(sklearn.linear_model, self.model_class)(**self.model_parameters)
         model.fit(df.loc[:, self.features], df.loc[:, self.target])
         pickle.dump(model, open(settings.MODELS / 'linear_model' / 'no_split' / 'model', 'wb'))
 
-        df_feature_coefficient['Coefficient'] += model.coef_
+        df_feature_coefficient['Importance'] += model.coef_
         visualization.visualize_feature_importance(
             df_feature_importance=df_feature_coefficient,
             title=f'{self.model_class} - No Split Feature Coefficient',
