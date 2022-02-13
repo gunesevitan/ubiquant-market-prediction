@@ -1,3 +1,5 @@
-from .mlp import *
-from .loss_functions import *
 from torch.nn import *
+
+from .mlp import *
+from .dae import *
+from .loss_functions import *
