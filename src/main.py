@@ -5,7 +5,7 @@ import pandas as pd
 import settings
 from linear_model_trainer import LinearModelTrainer
 from lgb_trainer import LightGBMTrainer
-from lgb_ranker import LightGBMRanker
+from ae_trainer import AutoEncoderTrainer
 from nn_trainer import NeuralNetworkTrainer
 
 
@@ -31,12 +31,6 @@ if __name__ == '__main__':
             model_parameters=config['model_parameters']
         )
 
-        if args.mode == 'train':
-            if config['validation_type'] == 'single_split':
-                trainer.train_and_validate_single_split(df)
-            elif config['validation_type'] == 'no_split':
-                trainer.train_no_split(df)
-
     elif config['model'] == 'lightgbm':
 
         trainer = LightGBMTrainer(
@@ -47,27 +41,13 @@ if __name__ == '__main__':
             categorical_features=config['categorical_features']
         )
 
-        if args.mode == 'train':
-            if config['validation_type'] == 'single_split':
-                trainer.train_and_validate_single_split(df)
-            elif config['validation_type'] == 'no_split':
-                trainer.train_no_split(df)
+    elif config['model'] == 'auto_encoder':
 
-    elif config['model'] == 'lightgbm_ranker':
-
-        trainer = LightGBMRanker(
+        trainer = AutoEncoderTrainer(
             features=config['features'],
-            target=config['target'],
             model_parameters=config['model_parameters'],
-            fit_parameters=config['fit_parameters'],
-            categorical_features=config['categorical_features']
+            training_parameters=config['training_parameters'],
         )
-
-        if args.mode == 'train':
-            if config['validation_type'] == 'single_split':
-                trainer.train_and_validate_single_split(df)
-            elif config['validation_type'] == 'no_split':
-                trainer.train_no_split(df)
 
     elif config['model'] == 'neural_network':
 
@@ -78,8 +58,8 @@ if __name__ == '__main__':
             training_parameters=config['training_parameters']
         )
 
-        if args.mode == 'train':
-            if config['validation_type'] == 'single_split':
-                trainer.train_and_validate_single_split(df)
-            elif config['validation_type'] == 'no_split':
-                trainer.train_no_split(df)
+    if args.mode == 'train':
+        if config['validation_type'] == 'single_split':
+            trainer.train_and_validate_single_split(df)
+        elif config['validation_type'] == 'no_split':
+            trainer.train_no_split(df)
