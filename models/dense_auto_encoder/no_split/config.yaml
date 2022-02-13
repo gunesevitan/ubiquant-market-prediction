@@ -46,7 +46,7 @@ training_parameters:
   swap_probability: 0.5
   loss_function: DAELoss
   loss_args:
-    loss_weight: 0.5
+    loss_weights: 0.5
   optimizer: Adam
   optimizer_args:
     lr: 0.001
