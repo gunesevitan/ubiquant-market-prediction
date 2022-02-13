@@ -63,7 +63,7 @@ class DenseAutoEncoder(nn.Module):
 
         x = self.encoder(x)
         x = self.decoder(x)
-        mask_output = self.mask_head(x)
+        mask_output = torch.sigmoid(self.mask_head(x))
         reconstruction_output = self.reconstruction_head(torch.cat([x, mask_output], dim=1))
 
         return mask_output, reconstruction_output
