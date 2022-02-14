@@ -45,7 +45,7 @@ def pearson_correlation_coefficient_eval_lgb(y_pred, train_dataset):
     is_higher_better (bool): Whether the higher is better or worse for the evaluation metric
     """
 
-    eval_name = 'pearson\'s r'
+    eval_name = 'pearson\'s_r'
     y_true = train_dataset.get_label()
     eval_result = pearsonr(y_true, y_pred)[0]
     is_higher_better = True
@@ -69,7 +69,7 @@ def pearson_correlation_coefficient_eval_xgb(y_pred, train_dataset):
     eval_result (float): Result of the evaluation metric
     """
 
-    eval_name = 'pearson\'s r'
+    eval_name = 'pearson\'s_r'
     y_true = train_dataset.get_label()
     eval_result = float(pearsonr(y_true, y_pred)[0])
 
