@@ -170,7 +170,7 @@ class DAELoss(nn.Module):
         super(DAELoss, self).__init__()
 
         self.mse_loss = nn.MSELoss()
-        self.bce_loss = nn.BCELoss()
+        self.bce_loss = nn.BCELoss(reduction='mean')
         self.loss_weights = loss_weights
 
     def forward(self, x_ground_truth, x_predictions, mask_ground_truth, mask_predictions):
@@ -191,7 +191,7 @@ class DAELoss(nn.Module):
         """
 
         reconstruction_loss = self.mse_loss(x_ground_truth, x_predictions)
-        mask_loss = self.bce_loss(mask_ground_truth, mask_predictions)
+        mask_loss = self.bce_loss(mask_predictions, mask_ground_truth)
         total_loss = (self.loss_weights * reconstruction_loss) + ((1 - self.loss_weights) * mask_loss)
 
         return total_loss
