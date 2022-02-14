@@ -45,6 +45,8 @@ class XGBoostTrainer:
         model.save_model(settings.MODELS / 'xgboost' / 'single_split' / 'model.json')
 
         df.loc[val_idx, 'predictions'] = model.predict(xgb.DMatrix(df.loc[val_idx, self.features]))
+        print(model.get_score(importance_type='gain'))
+        print(df_feature_importance)
         df_feature_importance['Importance'] += model.get_score(importance_type='gain')
         val_score = metrics.mean_pearson_correlation_coefficient(df)
         print(f'\nXGBoost Validation Score: {val_score:.6f}\n')
