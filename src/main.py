@@ -5,6 +5,7 @@ import pandas as pd
 import settings
 from linear_model_trainer import LinearModelTrainer
 from lgb_trainer import LightGBMTrainer
+from xgb_trainer import XGBoostTrainer
 from ae_trainer import AutoEncoderTrainer
 from nn_trainer import NeuralNetworkTrainer
 
@@ -39,6 +40,15 @@ if __name__ == '__main__':
             model_parameters=config['model_parameters'],
             fit_parameters=config['fit_parameters'],
             categorical_features=config['categorical_features']
+        )
+
+    elif config['model'] == 'xgboost':
+
+        trainer = XGBoostTrainer(
+            features=config['features'],
+            target=config['target'],
+            model_parameters=config['model_parameters'],
+            fit_parameters=config['fit_parameters']
         )
 
     elif config['model'] == 'auto_encoder':
