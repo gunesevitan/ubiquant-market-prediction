@@ -36,7 +36,7 @@ def pearson_correlation_coefficient_eval_lgb(y_pred, train_dataset):
     Parameters
     ----------
     y_pred [array-like of shape (n_samples)]: Predictions
-    train_dataset (lightgbm.basic.Dataset): Training dataset
+    train_dataset (lightgbm.Dataset): Training dataset
 
     Returns
     -------
@@ -51,3 +51,26 @@ def pearson_correlation_coefficient_eval_lgb(y_pred, train_dataset):
     is_higher_better = True
 
     return eval_name, eval_result, is_higher_better
+
+
+def pearson_correlation_coefficient_eval_xgb(y_pred, train_dataset):
+
+    """
+    Calculate Pearson correlation coefficient between ground-truth and predictions
+
+    Parameters
+    ----------
+    y_pred [array-like of shape (n_samples)]: Predictions
+    train_dataset (xgboost.DMatrix): Training dataset
+
+    Returns
+    -------
+    eval_name (str): Name of the evaluation metric
+    eval_result (float): Result of the evaluation metric
+    """
+
+    eval_name = 'pearson\'s r'
+    y_true = train_dataset.get_label()
+    eval_result = pearsonr(y_true, y_pred)[0]
+
+    return eval_name, eval_result
