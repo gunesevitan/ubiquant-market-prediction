@@ -45,7 +45,9 @@ class XGBoostTrainer:
         model.save_model(settings.MODELS / 'xgboost' / 'single_split' / 'model.json')
 
         df.loc[val_idx, 'predictions'] = model.predict(xgb.DMatrix(df.loc[val_idx, self.features]))
-        df_feature_importance['Importance'] += model.get_score(importance_type='gain')
+        for feature, importance in model.get_score(importance_type='gain').items():
+            df_feature_importance.loc[feature, 'Importance'] += importance
+
         val_score = metrics.mean_pearson_correlation_coefficient(df)
         print(f'\nXGBoost Validation Score: {val_score:.6f}\n')
         df['predictions'].to_csv(settings.MODELS / 'xgboost' / 'single_split' / 'predictions.csv', index=False)
@@ -88,7 +90,8 @@ class XGBoostTrainer:
         )
         model.save_model(settings.MODELS / 'xgboost' / 'no_split' / 'model.json')
 
-        df_feature_importance['Importance'] += model.get_score(importance_type='gain')
+        for feature, importance in model.get_score(importance_type='gain').items():
+            df_feature_importance.loc[feature, 'Importance'] += importance
         visualization.visualize_feature_importance(
             df_feature_importance=df_feature_importance,
             title='XGBoost - No Split Feature Importance (Gain)',
