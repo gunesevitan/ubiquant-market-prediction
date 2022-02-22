@@ -39,7 +39,9 @@ if __name__ == '__main__':
             target=config['target'],
             model_parameters=config['model_parameters'],
             fit_parameters=config['fit_parameters'],
-            categorical_features=config['categorical_features']
+            categorical_features=config['categorical_features'],
+            seeds=config['seeds'],
+            model_directory=config['model_directory']
         )
 
     elif config['model'] == 'xgboost':
@@ -48,7 +50,9 @@ if __name__ == '__main__':
             features=config['features'],
             target=config['target'],
             model_parameters=config['model_parameters'],
-            fit_parameters=config['fit_parameters']
+            fit_parameters=config['fit_parameters'],
+            seeds=config['seeds'],
+            model_directory=config['model_directory']
         )
 
     elif config['model'] == 'auto_encoder':
