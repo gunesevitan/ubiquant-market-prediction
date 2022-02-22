@@ -34,10 +34,7 @@ class LightGBMTrainer:
 
         # Create directory to save models and training results
         Path(settings.MODELS / self.model_directory).mkdir(parents=True, exist_ok=True)
-
         trn_idx, val_idx = df.loc[df['fold'] == 0].index, df.loc[df['fold'] == 1].index
-        trn_dataset = lgb.Dataset(df.loc[trn_idx, self.features], label=df.loc[trn_idx, self.target], categorical_feature=self.categorical_features)
-        val_dataset = lgb.Dataset(df.loc[val_idx, self.features], label=df.loc[val_idx, self.target], categorical_feature=self.categorical_features)
         seed_avg_val_predictions = np.zeros_like(df.loc[val_idx, self.target])
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
 
@@ -49,6 +46,9 @@ class LightGBMTrainer:
             self.model_parameters['bagging_seed'] = seed
             self.model_parameters['drop_seed'] = seed
             self.model_parameters['data_random_seed'] = seed
+
+            trn_dataset = lgb.Dataset(df.loc[trn_idx, self.features], label=df.loc[trn_idx, self.target], categorical_feature=self.categorical_features)
+            val_dataset = lgb.Dataset(df.loc[val_idx, self.features], label=df.loc[val_idx, self.target], categorical_feature=self.categorical_features)
 
             model = lgb.train(
                 params=self.model_parameters,
@@ -111,8 +111,6 @@ class LightGBMTrainer:
 
         # Create directory to save models and training results
         Path(settings.MODELS / self.model_directory).mkdir(parents=True, exist_ok=True)
-
-        trn_dataset = lgb.Dataset(df.loc[:, self.features], label=df.loc[:, self.target], categorical_feature=self.categorical_features)
         df_feature_importance = pd.DataFrame(data=np.zeros(len(self.features)), index=self.features, columns=['Importance'])
 
         for seed in self.seeds:
@@ -123,6 +121,8 @@ class LightGBMTrainer:
             self.model_parameters['bagging_seed'] = seed
             self.model_parameters['drop_seed'] = seed
             self.model_parameters['data_random_seed'] = seed
+
+            trn_dataset = lgb.Dataset(df.loc[:, self.features], label=df.loc[:, self.target], categorical_feature=self.categorical_features)
 
             model = lgb.train(
                 params=self.model_parameters,
