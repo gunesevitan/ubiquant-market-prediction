@@ -38,10 +38,10 @@ target: 'target'
 model_parameters:
   learning_rate: 0.01
   gamma: 0
-  max_depth: 6
-  min_child_weight: 1
-  subsample: 0.9
-  colsample_bytree: 0.9
+  max_depth: 12
+  min_child_weight: 100
+  subsample: 0.8
+  colsample_bytree: 1.0
   colsample_bylevel: 0.9
   colsample_bynode: 0.9
   lambda: 0
@@ -49,10 +49,11 @@ model_parameters:
   objective: reg:squarederror
   disable_default_eval_metric: True
   seed: 42
-  tree_method: auto
+  tree_method: gpu_hist
+  max_bin: 256
   n_jobs: -1
 
 fit_parameters:
   boosting_rounds: 10000
-  early_stopping_rounds: 250
+  early_stopping_rounds: 500
   verbose_eval: 100

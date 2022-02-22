@@ -71,6 +71,6 @@ def pearson_correlation_coefficient_eval_xgb(y_pred, train_dataset):
 
     eval_name = 'pearson\'s_r'
     y_true = train_dataset.get_label()
-    eval_result = pearsonr(y_true, y_pred)[0]
+    eval_result = float(pearsonr(y_true, y_pred)[0])
 
     return eval_name, eval_result
