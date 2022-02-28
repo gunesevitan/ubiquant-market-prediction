@@ -82,7 +82,7 @@ class LinearModelTrainer:
         model = getattr(sklearn.linear_model, self.model_class)(**self.model_parameters)
         model.fit(df.loc[:, self.features], df.loc[:, self.target])
         # Save trained model
-        pickle.dump(model, open(settings.MODELS / self.model_directory / 'no_split' / 'model', 'wb'))
+        pickle.dump(model, open(settings.MODELS / self.model_directory / 'no_split' / 'model.pkl', 'wb'))
 
         # Save feature coefficients
         df_feature_coefficient['Importance'] += model.coef_
