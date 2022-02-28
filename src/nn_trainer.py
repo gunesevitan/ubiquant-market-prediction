@@ -206,7 +206,7 @@ class NeuralNetworkTrainer:
             print(f'\nNeural Network Validation Score: {val_score:.6f} (Seed: {seed})\n')
             df['predictions'].to_csv(settings.MODELS / self.model_directory / 'single_split' / 'predictions.csv', index=False)
 
-            # Visualize learning curve and predictions
+            # Visualize learning curve
             visualization.visualize_learning_curve(
                 training_losses=summary['train_loss'],
                 validation_losses=summary['val_loss'],
@@ -214,6 +214,12 @@ class NeuralNetworkTrainer:
                 path=settings.MODELS / self.model_directory / 'single_split' / f'learning_curve_seed{seed}.png'
             )
 
+        df.loc[val_idx, 'predictions'] = seed_avg_val_predictions
+        val_score = metrics.mean_pearson_correlation_coefficient(df.loc[val_idx, :])
+        print(f'\nNeural Network Validation Score: {val_score:.6f} ({len(self.seeds)} Seed Average)\n')
+        df['predictions'].to_csv(settings.MODELS / self.model_directory / 'single_split' / 'predictions.csv', index=False)
+
+        # Visualize predictions
         visualization.visualize_predictions(
             y_true=df.loc[val_idx, self.target],
             y_pred=df.loc[val_idx, 'predictions'],
