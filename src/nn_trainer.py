@@ -210,15 +210,15 @@ class NeuralNetworkTrainer:
             visualization.visualize_learning_curve(
                 training_losses=summary['train_loss'],
                 validation_losses=summary['val_loss'],
-                title=f'{self.model_parameters["model_path"]} - Learning Curve',
+                title=f'{self.model_directory} - Learning Curve',
                 path=settings.MODELS / self.model_directory / 'single_split' / f'learning_curve_seed{seed}.png'
             )
 
         visualization.visualize_predictions(
             y_true=df.loc[val_idx, self.target],
             y_pred=df.loc[val_idx, 'predictions'],
-            title=f'{self.model_parameters["model_path"]} - Single Split Predictions',
-            path=settings.MODELS / self.model_parameters['model_path'] / 'single_split' / 'predictions.png'
+            title=f'{self.model_directory} - Single Split Predictions',
+            path=settings.MODELS / self.model_directory / 'single_split' / 'predictions.png'
         )
 
     def train_no_split(self, df):
@@ -283,6 +283,6 @@ class NeuralNetworkTrainer:
             visualization.visualize_learning_curve(
                 training_losses=summary['train_loss'],
                 validation_losses=None,
-                title=f'{self.model_parameters["model_path"]} - Learning Curve',
+                title=f'{self.model_directory} - Learning Curve',
                 path=settings.MODELS / self.model_directory / 'no_split' / f'learning_curve_seed{seed}.png'
             )
