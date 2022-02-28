@@ -1,3 +1,4 @@
+from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 from scipy.stats import pearsonr
@@ -15,12 +16,14 @@ import torch_modules
 
 class NeuralNetworkTrainer:
 
-    def __init__(self, features, target, model_parameters, training_parameters):
+    def __init__(self, features, target, model_parameters, training_parameters, seeds, model_directory):
 
         self.features = features
         self.target = target
         self.model_parameters = model_parameters
         self.training_parameters = training_parameters
+        self.seeds = seeds
+        self.model_directory = model_directory
 
     def train_fn(self, train_loader, model, criterion, optimizer, device, scheduler=None):
 
@@ -46,11 +49,11 @@ class NeuralNetworkTrainer:
         progress_bar = tqdm(train_loader)
         losses = []
 
-        for features, label in progress_bar:
-            features, label = features.to(device), label.to(device)
+        for features, labels in progress_bar:
+            features, labels = features.to(device), labels.to(device)
             optimizer.zero_grad()
-            output = model(features)
-            loss = criterion(label, output)
+            outputs = model(features)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
             if scheduler is not None:
@@ -88,15 +91,15 @@ class NeuralNetworkTrainer:
         predictions = []
 
         with torch.no_grad():
-            for features, label in progress_bar:
-                features, label = features.to(device), label.to(device)
-                output = model(features)
-                loss = criterion(output, label)
+            for features, labels in progress_bar:
+                features, labels = features.to(device), labels.to(device)
+                outputs = model(features)
+                loss = criterion(outputs, labels)
                 losses.append(loss.item())
                 average_loss = np.mean(losses)
                 progress_bar.set_description(f'val_loss: {average_loss:.6f}')
-                targets += label.detach().cpu().numpy().tolist()
-                predictions += output.detach().cpu().numpy().tolist()
+                targets += labels.detach().cpu().numpy().tolist()
+                predictions += outputs.detach().cpu().numpy().tolist()
 
         val_loss = np.mean(losses)
         val_predictions = np.array(predictions)
@@ -114,8 +117,11 @@ class NeuralNetworkTrainer:
         """
 
         print(f'\n{"-" * 30}\nRunning Neural Network Model for Training\n{"-" * 30}\n')
-
+        # Create directory to save models and training results
+        Path(settings.MODELS / self.model_directory).mkdir(parents=True, exist_ok=True)
         trn_idx, val_idx = df.loc[df['fold'] == 0].index, df.loc[df['fold'] == 1].index
+        seed_avg_val_predictions = np.zeros_like(df.loc[val_idx, self.target])
+
         train_dataset = TabularDataset(df.loc[trn_idx, self.features].values, df.loc[trn_idx, self.target].values)
         train_loader = DataLoader(
             train_dataset,
@@ -135,64 +141,78 @@ class NeuralNetworkTrainer:
             num_workers=self.training_parameters['data_loader']['num_workers']
         )
 
-        training_utils.set_seed(self.training_parameters['random_state'], deterministic_cudnn=self.training_parameters['deterministic_cudnn'])
-        device = torch.device(self.training_parameters['device'])
-        criterion = getattr(torch_modules, self.training_parameters['loss_function'])(**self.training_parameters['loss_args'])
-        model = getattr(torch_modules, self.model_parameters['model_class'])(**self.model_parameters['model_args'])
-        if self.model_parameters['model_checkpoint_path'] is not None:
-            model_checkpoint_path = self.model_parameters['model_checkpoint_path']
-            model.load_state_dict(torch.load(model_checkpoint_path))
-        model.to(device)
+        for seed in self.seeds:
 
-        optimizer = getattr(optim, self.training_parameters['optimizer'])(model.parameters(), **self.training_parameters['optimizer_args'])
-        scheduler = getattr(optim.lr_scheduler, self.training_parameters['lr_scheduler'])(optimizer, **self.training_parameters['lr_scheduler_args']) if self.training_parameters['lr_scheduler'] is not None else None
+            print(f'\nSeed {seed}\n')
 
-        early_stopping = False
-        summary = {
-            'train_loss': [],
-            'val_loss': []
-        }
+            # Set model, loss function, device and seed for reproducible results
+            training_utils.set_seed(seed, deterministic_cudnn=self.training_parameters['deterministic_cudnn'])
+            device = torch.device(self.training_parameters['device'])
+            criterion = getattr(torch_modules, self.training_parameters['loss_function'])(**self.training_parameters['loss_args'])
+            model = getattr(torch_modules, self.model_parameters['model_class'])(**self.model_parameters['model_args'])
+            if self.model_parameters['model_checkpoint_path'] is not None:
+                model_checkpoint_path = self.model_parameters['model_checkpoint_path']
+                model.load_state_dict(torch.load(model_checkpoint_path))
+            model.to(device)
 
-        for epoch in range(1, self.training_parameters['epochs'] + 1):
+            # Set optimizer and learning rate scheduler
+            optimizer = getattr(optim, self.training_parameters['optimizer'])(model.parameters(), **self.training_parameters['optimizer_args'])
+            scheduler = getattr(optim.lr_scheduler, self.training_parameters['lr_scheduler'])(optimizer, **self.training_parameters['lr_scheduler_args']) if self.training_parameters['lr_scheduler'] is not None else None
 
-            if early_stopping:
-                break
+            early_stopping = False
+            summary = {
+                'train_loss': [],
+                'val_loss': []
+            }
 
-            if self.training_parameters['lr_scheduler'] == 'ReduceLROnPlateau':
-                train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler=None)
-                val_loss, val_pearson_r, val_predictions = self.val_fn(val_loader, model, criterion, device)
-                scheduler.step(val_loss)
-            else:
-                train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler)
-                val_loss, val_pearson_r, val_predictions = self.val_fn(val_loader, model, criterion, device)
+            for epoch in range(1, self.training_parameters['epochs'] + 1):
 
-            print(f'Epoch {epoch} - Training Loss: {train_loss:.6f} - Validation Loss: {val_loss:.6f} Pearson\'s R: {val_pearson_r:.6f}')
-            best_val_loss = np.min(summary['val_loss']) if len(summary['val_loss']) > 0 else np.inf
-            if val_loss < best_val_loss:
-                model_path = settings.MODELS / self.model_parameters['model_path'] / 'single_split' / 'model.pt'
-                torch.save(model.state_dict(), model_path)
-                print(f'Saving model to {model_path} (validation loss decreased from {best_val_loss:.6f} to {val_loss:.6f})')
+                if early_stopping:
+                    break
 
-            summary['train_loss'].append(train_loss)
-            summary['val_loss'].append(val_loss)
-            df.loc[val_idx, 'predictions'] = val_predictions
+                if self.training_parameters['lr_scheduler'] == 'ReduceLROnPlateau':
+                    # Step on validation loss if learning rate scheduler is ReduceLROnPlateau
+                    train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler=None)
+                    val_loss, val_pearson_r, val_predictions = self.val_fn(val_loader, model, criterion, device)
+                    scheduler.step(val_loss)
+                else:
+                    # Learning rate scheduler will work in validation function if it is not ReduceLROnPlateau
+                    train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler)
+                    val_loss, val_pearson_r, val_predictions = self.val_fn(val_loader, model, criterion, device)
 
-            best_iteration = np.argmin(summary['val_loss']) + 1
-            if len(summary['val_loss']) - best_iteration >= self.training_parameters['early_stopping_patience']:
-                print(f'Early stopping (validation loss didn\'t increase for {self.training_parameters["early_stopping_patience"]} epochs/steps)')
-                print(f'Best validation loss is {np.min(summary["val_loss"]):.6f}')
-                early_stopping = True
+                print(f'Epoch {epoch} - Training Loss: {train_loss:.6f} - Validation Loss: {val_loss:.6f} Pearson\'s R: {val_pearson_r:.6f}')
+                best_val_loss = np.min(summary['val_loss']) if len(summary['val_loss']) > 0 else np.inf
+                if val_loss < best_val_loss:
+                    # Save model and validation set predictions if validation loss improves
+                    model_path = settings.MODELS / self.model_directory / 'single_split' / f'model_seed{seed}.pt'
+                    torch.save(model.state_dict(), model_path)
+                    print(f'Saving model to {model_path} (validation loss decreased from {best_val_loss:.6f} to {val_loss:.6f})')
+                    df.loc[val_idx, 'predictions'] = val_predictions
 
-        val_score = metrics.mean_pearson_correlation_coefficient(df.loc[val_idx])
-        print(f'\nNeural Network Validation Score: {val_score:.6f}\n')
-        df['predictions'].to_csv(settings.MODELS / self.model_parameters['model_path'] / 'single_split' / 'predictions.csv', index=False)
+                summary['train_loss'].append(train_loss)
+                summary['val_loss'].append(val_loss)
 
-        visualization.visualize_learning_curve(
-            training_losses=summary['train_loss'],
-            validation_losses=summary['val_loss'],
-            title=f'{self.model_parameters["model_path"]} - Learning Curve',
-            path=settings.MODELS / self.model_parameters['model_path'] / 'single_split' / f'{self.model_parameters["model_path"]}_learning_curve.png'
-        )
+                best_iteration = np.argmin(summary['val_loss']) + 1
+                if len(summary['val_loss']) - best_iteration >= self.training_parameters['early_stopping_patience']:
+                    print(f'Early stopping (validation loss didn\'t increase for {self.training_parameters["early_stopping_patience"]} epochs/steps)')
+                    print(f'Best validation loss is {np.min(summary["val_loss"]):.6f}')
+                    early_stopping = True
+
+            # Save validation set predictions with latest best loss
+            seed_avg_val_predictions += (df.loc[val_idx, 'predictions'] / len(self.seeds))
+
+            # Calculate mean pearson correlation coefficient on validation set
+            val_score = metrics.mean_pearson_correlation_coefficient(df.loc[val_idx, :])
+            print(f'\nNeural Network Validation Score: {val_score:.6f} (Seed: {seed})\n')
+            df['predictions'].to_csv(settings.MODELS / self.model_directory / 'single_split' / 'predictions.csv', index=False)
+
+            # Visualize learning curve and predictions
+            visualization.visualize_learning_curve(
+                training_losses=summary['train_loss'],
+                validation_losses=summary['val_loss'],
+                title=f'{self.model_parameters["model_path"]} - Learning Curve',
+                path=settings.MODELS / self.model_directory / 'single_split' / f'learning_curve_seed{seed}.png'
+            )
 
         visualization.visualize_predictions(
             y_true=df.loc[val_idx, self.target],
@@ -212,6 +232,8 @@ class NeuralNetworkTrainer:
         """
 
         print(f'\n{"-" * 30}\nRunning Neural Network Model for Training\n{"-" * 30}\n')
+        # Create directory to save models and training results
+        Path(settings.MODELS / self.model_directory).mkdir(parents=True, exist_ok=True)
 
         train_dataset = TabularDataset(df.loc[:, self.features].values, df.loc[:, self.target].values)
         train_loader = DataLoader(
@@ -223,36 +245,44 @@ class NeuralNetworkTrainer:
             num_workers=self.training_parameters['data_loader']['num_workers']
         )
 
-        training_utils.set_seed(self.training_parameters['random_state'], deterministic_cudnn=self.training_parameters['deterministic_cudnn'])
-        device = torch.device(self.training_parameters['device'])
-        criterion = getattr(torch_modules, self.training_parameters['loss_function'])(**self.training_parameters['loss_args'])
-        model = getattr(torch_modules, self.model_parameters['model_class'])(**self.model_parameters['model_args'])
-        if self.model_parameters['model_checkpoint_path'] is not None:
-            model_checkpoint_path = self.model_parameters['model_checkpoint_path']
-            model.load_state_dict(torch.load(model_checkpoint_path))
-        model.to(device)
+        for seed in self.seeds:
 
-        optimizer = getattr(optim, self.training_parameters['optimizer'])(model.parameters(), **self.training_parameters['optimizer_args'])
-        scheduler = getattr(optim.lr_scheduler, self.training_parameters['lr_scheduler'])(optimizer, **self.training_parameters['lr_scheduler_args']) if self.training_parameters['lr_scheduler'] is not None else None
+            print(f'\nSeed {seed}\n')
 
-        summary = {
-            'train_loss': []
-        }
+            # Set model, loss function, device and seed for reproducible results
+            training_utils.set_seed(self.training_parameters['random_state'], deterministic_cudnn=self.training_parameters['deterministic_cudnn'])
+            device = torch.device(self.training_parameters['device'])
+            criterion = getattr(torch_modules, self.training_parameters['loss_function'])(**self.training_parameters['loss_args'])
+            model = getattr(torch_modules, self.model_parameters['model_class'])(**self.model_parameters['model_args'])
+            if self.model_parameters['model_checkpoint_path'] is not None:
+                model_checkpoint_path = self.model_parameters['model_checkpoint_path']
+                model.load_state_dict(torch.load(model_checkpoint_path))
+            model.to(device)
 
-        for epoch in range(1, self.training_parameters['epochs'] + 1):
+            # Set optimizer and learning rate scheduler
+            optimizer = getattr(optim, self.training_parameters['optimizer'])(model.parameters(), **self.training_parameters['optimizer_args'])
+            scheduler = getattr(optim.lr_scheduler, self.training_parameters['lr_scheduler'])(optimizer, **self.training_parameters['lr_scheduler_args']) if self.training_parameters['lr_scheduler'] is not None else None
 
-            train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler)
+            summary = {
+                'train_loss': []
+            }
 
-            print(f'Epoch {epoch} - Training Loss: {train_loss:.6f}')
-            model_path = settings.MODELS / self.model_parameters['model_path'] / 'no_split' / 'model.pt'
-            torch.save(model.state_dict(), model_path)
-            print(f'Saving model to {model_path}')
+            for epoch in range(1, self.training_parameters['epochs'] + 1):
 
-            summary['train_loss'].append(train_loss)
+                train_loss = self.train_fn(train_loader, model, criterion, optimizer, device, scheduler)
 
-        visualization.visualize_learning_curve(
-            training_losses=summary['train_loss'],
-            validation_losses=None,
-            title=f'{self.model_parameters["model_path"]} - Learning Curve',
-            path=settings.MODELS / self.model_parameters['model_path'] / 'no_split' / f'{self.model_parameters["model_path"]}_learning_curve.png'
-        )
+                print(f'Epoch {epoch} - Training Loss: {train_loss:.6f}')
+                # Save model after every epoch
+                model_path = settings.MODELS / self.model_directory / 'no_split' / f'model_seed{seed}.pt'
+                torch.save(model.state_dict(), model_path)
+                print(f'Saving model to {model_path}')
+
+                summary['train_loss'].append(train_loss)
+
+            # Visualize learning curve
+            visualization.visualize_learning_curve(
+                training_losses=summary['train_loss'],
+                validation_losses=None,
+                title=f'{self.model_parameters["model_path"]} - Learning Curve',
+                path=settings.MODELS / self.model_directory / 'no_split' / f'learning_curve_seed{seed}.png'
+            )
