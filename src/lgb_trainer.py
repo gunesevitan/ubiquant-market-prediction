@@ -81,7 +81,7 @@ class LightGBMTrainer:
 
         df.loc[val_idx, 'predictions'] = seed_avg_val_predictions
         val_score = metrics.mean_pearson_correlation_coefficient(df.loc[val_idx, :])
-        print(f'\nLightGBM Validation Score: {val_score:.6f}\n ({len(self.seeds)} Seed Average)')
+        print(f'\nLightGBM Validation Score: {val_score:.6f} ({len(self.seeds)} Seed Average)\n')
         df['predictions'].to_csv(settings.MODELS / self.model_directory / 'single_split' / 'predictions.csv', index=False)
 
         # Visualize feature importance and predictions
