@@ -69,7 +69,9 @@ if __name__ == '__main__':
             features=config['features'],
             target=config['target'],
             model_parameters=config['model_parameters'],
-            training_parameters=config['training_parameters']
+            training_parameters=config['training_parameters'],
+            seeds=config['seeds'],
+            model_directory=config['model_directory']
         )
 
     if args.mode == 'train':
