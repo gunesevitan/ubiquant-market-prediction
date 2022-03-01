@@ -3,8 +3,9 @@ import torch.nn as nn
 from .activation_functions import Swish
 
 
-def init_weights(module, linear_weight_init_type, linear_weight_init_args, linear_bias_init_type, linear_bias_init_args,
-                 batch_normalization_weight_fill_value, batch_normalization_bias_fill_value):
+def init_weights(module,
+                 linear_weight_init_type, linear_weight_init_args, linear_bias_init_type, linear_bias_init_args,
+                 batch_normalization_weight_init_type, batch_normalization_weight_init_args, batch_normalization_bias_init_type, batch_normalization_bias_init_args):
 
     """
     Initialize weights and biases of given layers with specified configurations
@@ -16,8 +17,10 @@ def init_weights(module, linear_weight_init_type, linear_weight_init_args, linea
     linear_weight_init_args (dict): Weight initialization arguments of the linear layer
     linear_bias_init_type (str): Bias initialization method of the linear layer
     linear_bias_init_args (dict): Bias initialization arguments of the linear layer
-    batch_normalization_weight_fill_value (float): Weight initialization fill value of the batch normalization layer
-    batch_normalization_bias_fill_value (float): Bias initialization fill value of the batch normalization layer
+    batch_normalization_weight_init_type (str): Weight initialization method of the batch normalization layer
+    batch_normalization_weight_init_args (dict): Weight initialization arguments of the batch normalization layer
+    batch_normalization_bias_init_type (str): Bias initialization method of the batch normalization layer
+    batch_normalization_bias_init_args (dict): Bias initialization arguments of the batch normalization layer
     """
 
     if isinstance(module, nn.Linear):
@@ -94,10 +97,42 @@ def init_weights(module, linear_weight_init_type, linear_weight_init_args, linea
                 )
 
     elif isinstance(module, nn.BatchNorm1d):
-        pass
-        # Initialize weights and biases of batch normalization layer
-        #nn.init.constant_(module.weight, val=batch_normalization_weight_fill_value)
-        #nn.init.constant_(module.bias, val=batch_normalization_bias_fill_value)
+        # Initialize weights of batch normalization layer
+        if batch_normalization_weight_init_type == 'uniform':
+            nn.init.uniform_(
+                module.weight,
+                a=batch_normalization_weight_init_args['a'],
+                b=batch_normalization_weight_init_args['b']
+            )
+        elif batch_normalization_weight_init_type == 'normal':
+            nn.init.normal_(
+                module.weight,
+                mean=batch_normalization_weight_init_args['mean'],
+                std=batch_normalization_weight_init_args['std']
+            )
+        elif batch_normalization_weight_init_type == 'constant':
+            nn.init.constant_(
+                module.weight,
+                val=batch_normalization_weight_init_args['val'],
+            )
+        # Initialize biases of batch normalization layer
+        if batch_normalization_bias_init_type == 'uniform':
+            nn.init.uniform_(
+                module.bias,
+                a=batch_normalization_bias_init_args['a'],
+                b=batch_normalization_bias_init_args['b']
+            )
+        elif batch_normalization_bias_init_type == 'normal':
+            nn.init.normal_(
+                module.bias,
+                mean=batch_normalization_bias_init_args['mean'],
+                std=batch_normalization_bias_init_args['std']
+            )
+        elif batch_normalization_bias_init_type == 'constant':
+            nn.init.constant_(
+                module.bias,
+                val=batch_normalization_bias_init_args['val'],
+            )
 
 
 class DenseBlock(nn.Module):
