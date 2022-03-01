@@ -121,7 +121,7 @@ class DenseBlock(nn.Module):
         else:
             self.dropout = nn.Identity()
 
-        if self.activation is not None:
+        if activation is not None:
             self.activation = getattr(nn, activation)(**activation_args)
         else:
             self.activation = nn.Identity()
