@@ -123,7 +123,7 @@ class DenseBlock(nn.Module):
         else:
             self.dropout = nn.Identity()
 
-        if activation is not None:
+        if activation is not None and activation != 'Swish':
             self.activation = getattr(nn, activation)(**activation_args)
         elif activation == 'Swish':
             self.activation = Swish()
