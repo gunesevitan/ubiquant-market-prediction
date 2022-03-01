@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class PearsonCorrelationCoefficientLoss(nn.Module):
@@ -17,17 +18,21 @@ class PearsonCorrelationCoefficientLoss(nn.Module):
         return -loss
 
 
-class CosineSimilarityLoss(nn.Module):
+class WeightedRegressionCorrelationLoss(nn.Module):
 
-    def __init__(self):
+    def __init__(self, w):
 
-        super(CosineSimilarityLoss, self).__init__()
-        self.cosine_similarity = nn.CosineSimilarity()
+        super(WeightedRegressionCorrelationLoss, self).__init__()
+
+        self.w = w
 
     def forward(self, inputs, targets):
 
         x = inputs - torch.mean(inputs)
         y = targets - torch.mean(targets)
 
-        loss = self.cosine_similarity(x.view(-1, 1), y.view(-1, 1))
-        return -loss
+        pearson_correlation_coefficient_loss = torch.sum(x * y) / (torch.sqrt(torch.sum(x ** 2)) * torch.sqrt(torch.sum(y ** 2)))
+        mse_loss = F.mse_loss(inputs, targets)
+        loss = (self.w * -1 * pearson_correlation_coefficient_loss) + (1 - self.w * mse_loss)
+
+        return loss
