@@ -224,7 +224,8 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
+            init_args=init_args
+        )
         self.dense_block2 = DenseBlock(
             input_dim=512,
             output_dim=768,
@@ -233,7 +234,8 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
+            init_args=init_args
+        )
         self.dense_block3 = DenseBlock(
             input_dim=768,
             output_dim=1024,
@@ -242,7 +244,8 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
+            init_args=init_args
+        )
         self.dense_block4 = DenseBlock(
             input_dim=1024,
             output_dim=768,
@@ -251,7 +254,8 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
+            init_args=init_args
+        )
         self.dense_block5 = DenseBlock(
             input_dim=768,
             output_dim=512,
@@ -260,7 +264,8 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
+            init_args=init_args
+        )
         self.dense_block6 = DenseBlock(
             input_dim=512,
             output_dim=256,
@@ -269,9 +274,18 @@ class MultiLayerPerceptron(nn.Module):
             dropout_probability=dropout_probability,
             activation=activation,
             activation_args=activation_args,
-            init_args=init_args)
-
-        self.linear = nn.Linear(256, 1)
+            init_args=init_args
+        )
+        self.head = DenseBlock(
+            input_dim=256,
+            output_dim=1,
+            batch_normalization=False,
+            weight_normalization=False,
+            dropout_probability=0.0,
+            activation=None,
+            activation_args=None,
+            init_args=init_args
+        )
 
     def forward(self, x):
 
@@ -281,6 +295,6 @@ class MultiLayerPerceptron(nn.Module):
         x = self.dense_block4(x)
         x = self.dense_block5(x)
         x = self.dense_block6(x)
-        output = self.linear(x)
+        output = self.head(x)
 
         return output.view(-1)
