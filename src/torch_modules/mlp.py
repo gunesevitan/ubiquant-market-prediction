@@ -1,5 +1,7 @@
 import torch.nn as nn
 
+from activation_functions import Swish
+
 
 def init_weights(module, linear_weight_init_type, linear_weight_init_args, linear_bias_fill_value,
                  batch_normalization_weight_fill_value, batch_normalization_bias_fill_value):
@@ -123,6 +125,8 @@ class DenseBlock(nn.Module):
 
         if activation is not None:
             self.activation = getattr(nn, activation)(**activation_args)
+        elif activation == 'Swish':
+            self.activation = Swish()
         else:
             self.activation = nn.Identity()
 
