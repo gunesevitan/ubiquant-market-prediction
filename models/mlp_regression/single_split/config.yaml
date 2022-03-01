@@ -41,6 +41,20 @@ model_parameters:
   model_class: MultiLayerPerceptron
   model_args:
     input_dim: 300
+    batch_normalization: True
+    weight_normalization: False
+    dropout_probability: 0.0
+    activation: LeakyReLU
+    activation_args:
+      negative_slope: 0.1
+    init_args:
+      linear_weight_init_type: uniform
+      linear_weight_init_args:
+        a: 0
+        b: 1
+      linear_bias_fill_value: 0
+      batch_normalization_weight_fill_value: 0
+      batch_normalization_bias_fill_value: 0
   model_checkpoint_path: null
 
 training_parameters:
