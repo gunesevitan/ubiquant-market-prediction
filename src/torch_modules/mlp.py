@@ -5,7 +5,8 @@ from .activation_functions import Swish
 
 def init_weights(module,
                  linear_weight_init_type, linear_weight_init_args, linear_bias_init_type, linear_bias_init_args,
-                 batch_normalization_weight_init_type, batch_normalization_weight_init_args, batch_normalization_bias_init_type, batch_normalization_bias_init_args):
+                 batch_normalization_weight_init_type=None, batch_normalization_weight_init_args=None,
+                 batch_normalization_bias_init_type=None, batch_normalization_bias_init_args=None):
 
     """
     Initialize weights and biases of given layers with specified configurations
@@ -98,41 +99,43 @@ def init_weights(module,
 
     elif isinstance(module, nn.BatchNorm1d):
         # Initialize weights of batch normalization layer
-        if batch_normalization_weight_init_type == 'uniform':
-            nn.init.uniform_(
-                module.weight,
-                a=batch_normalization_weight_init_args['a'],
-                b=batch_normalization_weight_init_args['b']
-            )
-        elif batch_normalization_weight_init_type == 'normal':
-            nn.init.normal_(
-                module.weight,
-                mean=batch_normalization_weight_init_args['mean'],
-                std=batch_normalization_weight_init_args['std']
-            )
-        elif batch_normalization_weight_init_type == 'constant':
-            nn.init.constant_(
-                module.weight,
-                val=batch_normalization_weight_init_args['val'],
-            )
+        if batch_normalization_weight_init_type is not None:
+            if batch_normalization_weight_init_type == 'uniform':
+                nn.init.uniform_(
+                    module.weight,
+                    a=batch_normalization_weight_init_args['a'],
+                    b=batch_normalization_weight_init_args['b']
+                )
+            elif batch_normalization_weight_init_type == 'normal':
+                nn.init.normal_(
+                    module.weight,
+                    mean=batch_normalization_weight_init_args['mean'],
+                    std=batch_normalization_weight_init_args['std']
+                )
+            elif batch_normalization_weight_init_type == 'constant':
+                nn.init.constant_(
+                    module.weight,
+                    val=batch_normalization_weight_init_args['val'],
+                )
         # Initialize biases of batch normalization layer
-        if batch_normalization_bias_init_type == 'uniform':
-            nn.init.uniform_(
-                module.bias,
-                a=batch_normalization_bias_init_args['a'],
-                b=batch_normalization_bias_init_args['b']
-            )
-        elif batch_normalization_bias_init_type == 'normal':
-            nn.init.normal_(
-                module.bias,
-                mean=batch_normalization_bias_init_args['mean'],
-                std=batch_normalization_bias_init_args['std']
-            )
-        elif batch_normalization_bias_init_type == 'constant':
-            nn.init.constant_(
-                module.bias,
-                val=batch_normalization_bias_init_args['val'],
-            )
+        if batch_normalization_bias_init_type is not None:
+            if batch_normalization_bias_init_type == 'uniform':
+                nn.init.uniform_(
+                    module.bias,
+                    a=batch_normalization_bias_init_args['a'],
+                    b=batch_normalization_bias_init_args['b']
+                )
+            elif batch_normalization_bias_init_type == 'normal':
+                nn.init.normal_(
+                    module.bias,
+                    mean=batch_normalization_bias_init_args['mean'],
+                    std=batch_normalization_bias_init_args['std']
+                )
+            elif batch_normalization_bias_init_type == 'constant':
+                nn.init.constant_(
+                    module.bias,
+                    val=batch_normalization_bias_init_args['val'],
+                )
 
 
 class DenseBlock(nn.Module):
