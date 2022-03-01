@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from activation_functions import Swish
+from .activation_functions import Swish
 
 
 def init_weights(module, linear_weight_init_type, linear_weight_init_args, linear_bias_fill_value,
